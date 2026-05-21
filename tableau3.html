@@ -64,6 +64,21 @@
 
 <input type="file" id="csvFile" accept=".csv" />
 
+<h3>Ou coller un CSV</h3>
+
+<textarea
+  id="csvPaste"
+  rows="10"
+  style="width:100%; margin-top:10px;"
+  placeholder="Collez votre CSV ici..."
+></textarea>
+
+<br><br>
+
+<button id="loadPasteBtn">
+  Charger le CSV collé
+</button>
+
 <table>
   <thead id="tableHead"></thead>
   <tbody id="tableBody"></tbody>
@@ -87,6 +102,23 @@ fileInput.addEventListener("change", function(event) {
   reader.readAsText(file);
 });
 
+const loadPasteBtn = document.getElementById("loadPasteBtn");
+
+loadPasteBtn.addEventListener("click", function() {
+
+  const pastedCSV = document
+    .getElementById("csvPaste")
+    .value
+    .trim();
+
+  if (!pastedCSV) {
+    alert("Veuillez coller un CSV.");
+    return;
+  }
+
+  loadCSV(pastedCSV);
+});
+  
 function loadCSV(csv) {
 
   // SPLIT CSV
