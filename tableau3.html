@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>CSV Dynamic Table</title>
+
+<style>
+  body {
+    font-family: Arial;
+    padding: 20px;
+    background: #f5f5f5;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    margin-top: 20px;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+  }
+
+  th {
+    background: #333;
+    color: white;
+  }
+
+  .filter-input {
+    width: 95%;
+    padding: 5px;
+    margin-top: 5px;
+    font-size: 12px;
+  }
+
+  .tag {
+    color: white;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .low {
+    background: green;
+  }
+
+  .mid {
+    background: orange;
+  }
+
+  .high {
+    background: red;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>Importer un CSV</h2>
+
+<input type="file" id="csvFile" accept=".csv" />
+
+<table>
+  <thead id="tableHead"></thead>
+  <tbody id="tableBody"></tbody>
+</table>
+
+<script>
+const fileInput = document.getElementById("csvFile");
+
+fileInput.addEventListener("change", function(event) {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    const csv = e.target.result;
+    loadCSV(csv);
+  };
+
+  reader.readAsText(file);
+});
+
+function loadCSV(csv) {
+
+  // SPLIT CSV
+  const lines = csv.trim().split("\n");
+
+  // HEADERS
+  const headers = lines[0]
+    .split(",")
+    .map(h => h.trim());
+
+  // CLEAR TABLE
+  document.getElementById("tableHead").innerHTML = "";
+  document.getElementById("tableBody").innerHTML = "";
+
+  const thead = document.getElementById("tableHead");
+
+  // =========================
+  // HEADER ROW
+  // =========================
+  const headerRow = document.createElement("tr");
+
+  headers.forEach(header => {
+    const th = document.createElement("th");
+    th.textContent = header;
+    headerRow.appendChild(th);
+  });
+
+  thead.appendChild(headerRow);
+
+  // =========================
+  // FILTER ROW
+  // =========================
+  const filterRow = document.createElement("tr");
+
+  headers.forEach((header, index) => {
+
+    const th = document.createElement("th");
+
+    const input = document.createElement("input");
+
+    input.type = "text";
+    input.placeholder = `Filtrer ${header}`;
+    input.className = "filter-input";
+
+    // FILTER EVENT
+    input.addEventListener("input", applyFilters);
+
+    // STORE COLUMN INDEX
+    input.dataset.column = index;
+
+    th.appendChild(input);
+
+    filterRow.appendChild(th);
+  });
+
+  thead.appendChild(filterRow);
+
+  // =========================
+  // TABLE BODY
+  // =========================
+  const tableBody = document.getElementById("tableBody");
+
+  for (let i = 1; i < lines.length; i++) {
+
+    const data = lines[i]
+      .split(",")
+      .map(d => d.trim());
+
+    const row = document.createElement("tr");
+
+    data.forEach(cellData => {
+
+      const td = document.createElement("td");
+
+      // OPTIONAL:
+      // AUTO STYLE low/mid/high
+      const lower = cellData.toLowerCase();
+
+      if (
+        lower === "low" ||
+        lower === "mid" ||
+        lower === "high"
+      ) {
+
+        td.innerHTML = `
+          <span class="tag ${lower}">
+            ${cellData.toUpperCase()}
+          </span>
+        `;
+
+      } else {
+
+        td.textContent = cellData;
+      }
+
+      row.appendChild(td);
+    });
+
+    tableBody.appendChild(row);
+  }
+}
+
+// ====================================
+// FILTER FUNCTION
+// ====================================
+function applyFilters() {
+
+  const rows = document.querySelectorAll("#tableBody tr");
+
+  const filterInputs = document.querySelectorAll(".filter-input");
+
+  rows.forEach(row => {
+
+    let showRow = true;
+
+    filterInputs.forEach(input => {
+
+      const columnIndex = input.dataset.column;
+
+      const filterValue = input.value
+        .toLowerCase()
+        .trim();
+
+      if (filterValue === "") return;
+
+      const cell = row.children[columnIndex];
+
+      if (!cell) return;
+
+      const cellText = cell.textContent.toLowerCase();
+
+      // IF FILTER DOESN'T MATCH
+      if (!cellText.includes(filterValue)) {
+        showRow = false;
+      }
+    });
+
+    row.style.display = showRow ? "" : "none";
+  });
+}
+</script>
+
+</body>
+</html>
