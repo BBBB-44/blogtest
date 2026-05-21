@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>CSV Upload Table</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    th {
+      background: #333;
+      color: white;
+    }
+
+    .tag {
+      color: white;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .low {
+      background: green;
+    }
+
+    .mid {
+      background: orange;
+    }
+
+    .high {
+      background: red;
+    }
+
+    .filters {
+      margin-top: 20px;
+    }
+
+    .filters button {
+      padding: 8px 14px;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+
+    .active {
+      background: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Importer un CSV</h2>
+
+  <!-- FILE INPUT -->
+  <input type="file" id="csvFile" accept=".csv" />
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <button class="active" onclick="filterTable('all', this)">Toutes</button>
+    <button onclick="filterTable('low', this)">Low</button>
+    <button onclick="filterTable('mid', this)">Mid</button>
+    <button onclick="filterTable('high', this)">High</button>
+  </div>
+
+  <!-- TABLE -->
+  <table>
+    <thead>
+      <tr id="tableHead"></tr>
+    </thead>
+
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <script>
+    const fileInput = document.getElementById("csvFile");
+
+    fileInput.addEventListener("change", function(event) {
+      const file = event.target.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const csv = e.target.result;
+
+        loadCSV(csv);
+      };
+
+      reader.readAsText(file);
+    });
+
+    function loadCSV(csv) {
+      const lines = csv.trim().split("\n");
+
+      const headers = lines[0].split(",");
+
+      // CLEAR OLD TABLE
+      document.getElementById("tableHead").innerHTML = "";
+      document.getElementById("tableBody").innerHTML = "";
+
+      // CREATE HEADERS
+      const headRow = document.getElementById("tableHead");
+
+      headers.forEach(header => {
+        const th = document.createElement("th");
+        th.textContent = header;
+        headRow.appendChild(th);
+      });
+
+      // CREATE ROWS
+      const tableBody = document.getElementById("tableBody");
+
+      for (let i = 1; i < lines.length; i++) {
+        const data = lines[i].split(",");
+
+        const row = document.createElement("tr");
+
+        row.dataset.priority = data[1];
+
+        row.innerHTML = `
+          <td>${data[0]}</td>
+
+          <td>
+            <span class="tag ${data[1]}">
+              ${data[1].toUpperCase()}
+            </span>
+          </td>
+
+          <td>${data[2]}</td>
+        `;
+
+        tableBody.appendChild(row);
+      }
+    }
+
+    function filterTable(priority, button) {
+      const rows = document.querySelectorAll("#tableBody tr");
+      const buttons = document.querySelectorAll(".filters button");
+
+      buttons.forEach(btn => btn.classList.remove("active"));
+      button.classList.add("active");
+
+      rows.forEach(row => {
+        if (
+          priority === "all" ||
+          row.dataset.priority === priority
+        ) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
